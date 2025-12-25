@@ -1,0 +1,27 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+venv/
+
+# Environment
+.env
+
+# Uploads
+backend/uploads/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+# Node / Frontend
+node_modules/
+frontend/node_modules/
+.pnpm/
+frontend/.pnpm/
+.next/
+frontend/.next/
