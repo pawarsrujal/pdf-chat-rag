@@ -60,32 +60,38 @@ Grounded, Citation-Backed Answer
 
 ## 📂 Project Structure
 
-
+```
 ai-research-assistant/
 │
 ├── backend/
 │   ├── api/
 │   │   ├── chat.py            # Chat endpoint
 │   │   └── upload.py          # Document ingestion endpoint
+│   │
 │   ├── db/
 │   │   └── pinecone_db.py     # Vector DB operations
+│   │
 │   ├── services/
 │   │   ├── embeddings.py      # Embedding generation
 │   │   └── llm.py             # LLM interaction & prompt logic
+│   │
 │   ├── utils/
 │   │   └── helpers.py         # OCR, parsing utilities
+│   │
 │   └── main.py                # FastAPI app entry point
 │
 └── frontend/
     ├── pages/
-    │   ├── index.tsx           # Landing page
-    │   └── chat.tsx            # Chat interface
+    │   ├── index.tsx          # Landing page
+    │   └── chat.tsx           # Chat interface
+    │
     ├── components/
-    │   ├── ChatMessage.tsx     # Message bubble component
-    │   └── FileUpload.tsx      # Drag-and-drop uploader
+    │   ├── ChatMessage.tsx    # Message bubble component
+    │   └── FileUpload.tsx     # Drag-and-drop uploader
+    │
     └── services/
-        └── api.ts              # API call handlers
-
+        └── api.ts             # API call handlers
+```
 
 
 
