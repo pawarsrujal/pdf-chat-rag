@@ -1,199 +1,134 @@
 
-# AI Research & Knowledge Assistant
-🧠 AI Research Assistant 
-An AI-powered Research Assistant that allows users to upload documents (PDF/DOCX) and ask questions strictly based on the uploaded content using Retrieval-Augmented Generation (RAG).
+# 🧠 AI Research & Knowledge Assistant
 
-The system is designed to be hallucination-safe, meaning the AI only answers if the information exists in the document, otherwise it explicitly says “I don't know based on the uploaded document.”
+An intelligent, hallucination-safe document Q&A system powered by **Retrieval-Augmented Generation (RAG)**.  
+Upload any PDF or DOCX file and ask questions — the AI answers strictly from your document, never from guesswork.
 
-🚀 Features
+> **"If it's not in the document, the AI won't pretend it is."**
 
-📄 Upload PDF / DOCX documents
+---
 
-🔍 Semantic search using Pinecone Vector Database
+## ✨ Features
 
-🧠 Context-aware answers using LLM (Groq / LLaMA)
+| Feature | Description |
+|---|---|
+| 📄 Document Upload | Supports PDF and DOCX formats |
+| 🔍 Semantic Search | Pinecone vector DB for context-aware retrieval |
+| 🧠 LLM-Powered Answers | Groq / LLaMA for fast, intelligent responses |
+| 🧪 OCR Fallback | Tesseract handles scanned or image-based PDFs |
+| 📌 Source Attribution | Answers include confidence scores and source references |
+| 🛡️ Hallucination-Safe | Explicitly says *"I don't know"* when info isn't in the doc |
+| 🎯 Summary-Aware Retrieval | Handles long documents intelligently |
+| 🔄 Session Reset | Easily clear context and upload a new document |
 
-🧪 OCR fallback for scanned PDFs (Tesseract)
+---
 
-📌 Source attribution with confidence scores
+## 🏗️ Architecture
 
-🔄 Reset chat to upload a new document
 
-🎯 Summary-aware retrieval for long documents
+User
+ │
+ ▼
+Frontend (Next.js + TypeScript)
+ │  REST API
+ ▼
+Backend (FastAPI + Python)
+ │  Embedding Generation
+ ▼
+Pinecone Vector Database
+ │  Semantic Retrieval
+ ▼
+LLM — Groq / LLaMA
+ │
+ ▼
+Grounded, Citation-Backed Answer
 
-🛡️ Strict RAG (No hallucinations)
 
-🏗️ System Architecture
-Frontend (Next.js)
-        |
-        |  REST API
-        v
-Backend (FastAPI)
-        |
-        |  Embeddings
-        v
-Pinecone Vector DB
-        |
-        v
-LLM (Groq / LLaMA)
 
-🧩 Tech Stack
-Frontend
+## 🧩 Tech Stack
 
-Next.js (React)
+**Frontend**
+- Next.js (React) · TypeScript · Tailwind CSS
 
-TypeScript
+**Backend**
+- FastAPI · Python 3.10+ · pdfplumber · pytesseract · pdf2image
 
-Tailwind CSS
+**AI & Storage**
+- Pinecone Vector DB · Groq LLM · LLaMA · Sentence Embeddings
 
-Backend
+---
 
-FastAPI
+## 📂 Project Structure
 
-Python 3.10+
 
-Pinecone
-
-Groq LLM
-
-pdfplumber
-
-pytesseract (OCR)
-
-pdf2image
-
-📂 Project Structure
 ai-research-assistant/
 │
 ├── backend/
 │   ├── api/
-│   │   ├── chat.py
-│   │   └── upload.py
+│   │   ├── chat.py            # Chat endpoint
+│   │   └── upload.py          # Document ingestion endpoint
 │   ├── db/
-│   │   └── pinecone_db.py
+│   │   └── pinecone_db.py     # Vector DB operations
 │   ├── services/
-│   │   ├── embeddings.py
-│   │   └── llm.py
+│   │   ├── embeddings.py      # Embedding generation
+│   │   └── llm.py             # LLM interaction & prompt logic
 │   ├── utils/
-│   │   └── helpers.py
-│   ├── main.py
-│   └── requirements.txt
+│   │   └── helpers.py         # OCR, parsing utilities
+│   └── main.py                # FastAPI app entry point
 │
-├── frontend/
-│   ├── pages/
-│   │   ├── index.tsx
-│   │   └── chat.tsx
-│   ├── components/
-│   │   ├── ChatMessage.tsx
-│   │   └── FileUpload.tsx
-│   ├── services/
-│   │   └── api.ts
-│   └── package.json
-
-⚙️ Environment Variables
-
-Create a .env file inside backend/:
-
-GROQ_API_KEY=your_groq_api_key
-PINECONE_API_KEY=your_pinecone_api_key
-PINECONE_INDEX_NAME=your_index_name
+└── frontend/
+    ├── pages/
+    │   ├── index.tsx           # Landing page
+    │   └── chat.tsx            # Chat interface
+    ├── components/
+    │   ├── ChatMessage.tsx     # Message bubble component
+    │   └── FileUpload.tsx      # Drag-and-drop uploader
+    └── services/
+        └── api.ts              # API call handlers
 
 
-An AI-powered Research Assistant that allows users to upload documents (PDF/DOCX) and ask questions strictly based on the uploaded content using Retrieval-Augmented Generation (RAG).
 
-The system is designed to be hallucination-safe, meaning the AI only answers if the information exists in the document, otherwise it explicitly says “I don't know based on the uploaded document.”
 
-🚀 Features
 
-📄 Upload PDF / DOCX documents
 
-🔍 Semantic search using Pinecone Vector Database
+## 🔄 How It Works
 
-🧠 Context-aware answers using LLM (Groq / LLaMA)
+1. **Upload** — User uploads a PDF or DOCX document
+2. **Parse & Chunk** — Document is extracted (with OCR fallback) and split into semantic chunks
+3. **Embed** — Chunks are converted to vector embeddings and stored in Pinecone
+4. **Query** — User asks a question; the query is embedded and matched against stored vectors
+5. **Retrieve & Generate** — Top-k relevant chunks are passed to the LLM with a strict grounding prompt
+6. **Respond** — The LLM returns a cited, confidence-scored answer — or says *"I don't know"*
 
-🧪 OCR fallback for scanned PDFs (Tesseract)
+---
 
-📌 Source attribution with confidence scores
+## 🎯 Use Cases
 
-🔄 Reset chat to upload a new document
+- Academic paper analysis
+- Legal document Q&A
+- Technical manual search
+- Corporate report summarization
+- Medical document review
 
-🎯 Summary-aware retrieval for long documents
+---
 
-🛡️ Strict RAG (No hallucinations)
+## 🚀 Future Roadmap
 
-🏗️ System Architecture
-Frontend (Next.js)
-        |
-        |  REST API
-        v
-Backend (FastAPI)
-        |
-        |  Embeddings
-        v
-Pinecone Vector DB
-        |
-        v
-LLM (Groq / LLaMA)
+- [ ] Multi-document support with cross-document reasoning
+- [ ] Chat history persistence
+- [ ] Fine-tuned domain-specific embeddings
+- [ ] REST API public access with rate limiting
+- [ ] Support for Excel, PowerPoint, and web URLs
 
-🧩 Tech Stack
-Frontend
+---
 
-Next.js (React)
+## 🛠️ Requirements
 
-TypeScript
 
-Tailwind CSS
+Python >= 3.10
+Node.js >= 18
+```
 
-Backend
 
-FastAPI
-
-Python 3.10+
-
-Pinecone
-
-Groq LLM
-
-pdfplumber
-
-pytesseract (OCR)
-
-pdf2image
-
-📂 Project Structure
-ai-research-assistant/
-│
-├── backend/
-│   ├── api/
-│   │   ├── chat.py
-│   │   └── upload.py
-│   ├── db/
-│   │   └── pinecone_db.py
-│   ├── services/
-│   │   ├── embeddings.py
-│   │   └── llm.py
-│   ├── utils/
-│   │   └── helpers.py
-│   ├── main.py
-│   └── requirements.txt
-│
-├── frontend/
-│   ├── pages/
-│   │   ├── index.tsx
-│   │   └── chat.tsx
-│   ├── components/
-│   │   ├── ChatMessage.tsx
-│   │   └── FileUpload.tsx
-│   ├── services/
-│   │   └── api.ts
-│   └── package.json
-
-⚙️ Environment Variables
-
-Create a .env file inside backend/:
-
-GROQ_API_KEY=your_groq_api_key
-PINECONE_API_KEY=your_pinecone_api_key
-PINECONE_INDEX_NAME=your_index_name
 
 
