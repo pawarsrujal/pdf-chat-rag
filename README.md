@@ -131,8 +131,8 @@ ai-research-assistant/
 ## 🛠️ Requirements
 
 
-Python >= 3.10
-Node.js >= 18
+Python >= 3.10    
+                                                                                                                                                                  Node.js >= 18
 ```
 
 
