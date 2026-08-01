@@ -1,7 +1,12 @@
 import { useState } from 'react'
 import api from '@/services/api'
 
-export default function FileUpload() {
+interface FileUploadProps {
+  onUploadStart?: () => void
+  onUploadComplete?: (success: boolean) => void
+}
+
+export default function FileUpload({ onUploadStart, onUploadComplete }: FileUploadProps) {
   const [file, setFile] = useState<File | null>(null)
   const [uploading, setUploading] = useState(false)
   const [message, setMessage] = useState('')
@@ -16,6 +21,7 @@ export default function FileUpload() {
     if (!file) return
 
     setUploading(true)
+    onUploadStart?.()
     setMessage('')
 
     const formData = new FormData()
@@ -33,12 +39,14 @@ export default function FileUpload() {
       console.log('Response status:', response.status)
       console.log('Response data:', response.data)
       setMessage(`Successfully uploaded ${response.data.filename}`)
+      onUploadComplete?.(true)
       setFile(null)
     } catch (error: any) {
       console.log('Error status:', error.response?.status)
       console.log('Error data:', error.response?.data)
       console.log('Error message:', error.message)
       setMessage(error.response?.data?.detail || error.message || 'Upload failed')
+      onUploadComplete?.(false)
     } finally {
       setUploading(false)
     }

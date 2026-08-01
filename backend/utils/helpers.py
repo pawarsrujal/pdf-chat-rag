@@ -5,6 +5,10 @@ Utility helper functions for document processing.
 import re
 import uuid
 from typing import List
+from pdf2image import convert_from_bytes
+import pytesseract
+pytesseract.pytesseract.tesseract_cmd = r"C:\Program Files\Tesseract-OCR\tesseract.exe"
+
 
 
 # -------------------------------------------------
@@ -104,15 +108,32 @@ def extract_text_from_file(filename: str, content: bytes) -> str:
 # PDF extraction
 # -------------------------------------------------
 def extract_text_from_pdf(content: bytes) -> str:
+    """
+    PDF extraction with OCR fallback for scanned / resume PDFs.
+    """
+
     from io import BytesIO
     import pdfplumber
 
+    # 1️⃣ Try normal PDF text extraction
     text = ""
     with pdfplumber.open(BytesIO(content)) as pdf:
         for page in pdf.pages:
             page_text = page.extract_text()
             if page_text:
                 text += page_text + "\n"
+
+    # 2️⃣ OCR fallback if text is too small
+    if len(text.strip()) < 200:
+        print("⚠️ Low PDF text detected, using OCR fallback")
+        images = convert_from_bytes(content)
+
+        ocr_text = ""
+        for img in images:
+            ocr_text += pytesseract.image_to_string(img) + "\n"
+
+        print("🧠 OCR extracted chars:", len(ocr_text))
+        return ocr_text
 
     return text
 

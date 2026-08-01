@@ -1,12 +1,15 @@
 """
-Chat API – Single PDF RAG (Stable & Safe)
+Chat API – Single PDF RAG (Stable, Safe & Summary-Aware)
 """
 
 from fastapi import APIRouter
+from fastapi.responses import JSONResponse
 import os
+import logging
 from models.schemas import ChatRequest, ChatResponse, Source
 
 router = APIRouter(tags=["chat"])
+logger = logging.getLogger(__name__)
 
 _embedding_service = None
 _pinecone_db = None
@@ -16,6 +19,9 @@ _llm_service = None
 MAX_CONTEXT_CHARS = 2500
 
 
+# -------------------------------------------------
+# Lazy loaders (important for low RAM & Windows)
+# -------------------------------------------------
 def get_embedding_service():
     global _embedding_service
     if _embedding_service is None:
@@ -53,11 +59,22 @@ async def chat(request: ChatRequest):
     # 1️⃣ Embed user query
     query_embedding = embedding_service.encode([request.message])[0]
 
-    # 2️⃣ Retrieve chunks
+    # 🔍 Detect summary-style queries
+    summary_mode = any(
+        word in request.message.lower()
+        for word in ["summarize", "summary", "overview", "brief"]
+    )
+
+    top_k = 30 if summary_mode else 10
+
+    # 2️⃣ Retrieve chunks from Pinecone
     matches = pinecone_db.query(
         query_embedding=query_embedding,
-        top_k=10
+        top_k=top_k
     )
+
+    # 🔍 DEBUG (VERY IMPORTANT)
+    print("🔍 MATCH SAMPLE:", matches[:1])
 
     if not matches:
         return ChatResponse(
@@ -71,36 +88,38 @@ async def chat(request: ChatRequest):
     current_len = 0
     sources = []
 
+    max_context_chars = 8000 if summary_mode else MAX_CONTEXT_CHARS
+
     for match in matches:
-        text = match.get("metadata", {}).get("content", "")
+        metadata = match.get("metadata") or {}
+        text = metadata.get("content") or ""
+
         if not text:
             continue
 
-        if current_len + len(text) > MAX_CONTEXT_CHARS:
+        remaining_budget = max_context_chars - current_len
+
+        if remaining_budget <= 0:
             break
+
+        if len(text) > remaining_budget:
+            text = text[:remaining_budget]
 
         context += text + "\n\n"
         current_len += len(text)
 
         sources.append(
             Source(
-                document_name="uploaded_document",
+                document_name=metadata.get("filename", "uploaded_document"),
                 content=text[:300],
                 score=round(match.get("score", 0.0), 3)
             )
         )
 
-    if not context.strip():
-        return ChatResponse(
-            response="I don't know based on the uploaded document.",
-            sources=[],
-            session_id="chat"
-        )
-
-    # 4️⃣ Build prompt (STRICT RAG)
+    # 4️⃣ STRICT RAG PROMPT
     prompt = f"""
 Answer the question using ONLY the information below.
-If the answer is not present, say:
+If the answer is not present, say exactly:
 "I don't know based on the uploaded document."
 
 Context:
@@ -125,17 +144,24 @@ Instructions:
 
 
 # -------------------------------------------------
-# RESET CHAT (VERY IMPORTANT)
+# RESET CHAT (Single-PDF SAFETY)
 # -------------------------------------------------
 @router.post("/reset-chat")
 def reset_chat():
     from db.pinecone_db import PineconeDatabase
-    import api.upload  # to reset upload flag
+    import api.upload  # reset upload flag
 
-    # Delete all vectors
-    PineconeDatabase().index.delete(delete_all=True)
+    db = PineconeDatabase()
 
-    # Reset upload state
+    try:
+        db.index.delete(delete_all=True)
+    except Exception as e:
+        logger.error("Pinecone reset failed", exc_info=e)
+        return JSONResponse(
+            status_code=500,
+            content={"status": "error", "detail": str(e)}
+        )
+
     api.upload.pdf_uploaded = False
 
     return {"status": "chat reset"}

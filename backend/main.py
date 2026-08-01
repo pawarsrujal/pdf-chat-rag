@@ -9,12 +9,14 @@ load_dotenv()
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 from api.auth import router as auth_router
 from api.upload import router as upload_router
 from api.chat import router as chat_router
 
 import os
 import asyncio
+import logging
 
 
 
@@ -28,6 +30,16 @@ app = FastAPI(
     description="A RAG-based assistant for document analysis and Q&A",
     version="1.0.0"
 )
+
+logger = logging.getLogger(__name__)
+
+@app.exception_handler(Exception)
+async def global_exception_handler(request, exc: Exception):
+    logger.exception("Unhandled exception", exc_info=exc)
+    return JSONResponse(
+        status_code=500,
+        content={"error": "Internal server error", "detail": str(exc)}
+    )
 
 # CORS middleware
 app.add_middleware(

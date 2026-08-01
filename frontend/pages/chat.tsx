@@ -19,6 +19,8 @@ interface ChatState {
   sessionId: string | null
   role: string
   error: string | null
+  isDocumentUploading: boolean
+  isDocumentReady: boolean
 }
 
 export default function Chat() {
@@ -28,19 +30,15 @@ export default function Chat() {
     isLoading: false,
     sessionId: null,
     role: 'researcher',
-    error: null
+    error: null,
+    isDocumentUploading: false,
+    isDocumentReady: false
   })
+
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const router = useRouter()
 
-  useEffect(() => {
-    // TEMP: bypass auth check
-    // const token = localStorage.getItem('token')
-    // if (!token) {
-    //   router.push('/login')
-    // }
-  }, [router])
-
+  // auto scroll
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [state.messages])
@@ -49,6 +47,15 @@ export default function Chat() {
     setState(prev => ({ ...prev, ...updates }))
   }
 
+  const handleUploadStart = () => {
+    updateState({ isDocumentUploading: true, isDocumentReady: false })
+  }
+
+  const handleUploadComplete = (success: boolean) => {
+    updateState({ isDocumentUploading: false, isDocumentReady: success })
+  }
+
+  // ---------------- SEND MESSAGE ----------------
   const handleSend = async () => {
     if (!state.input.trim() || state.isLoading) return
 
@@ -59,8 +66,11 @@ export default function Chat() {
       timestamp: new Date()
     }
 
+    // 🔒 capture messages ONCE (fixes disappearing bug)
+    const updatedMessages = [...state.messages, userMessage]
+
     updateState({
-      messages: [...state.messages, userMessage],
+      messages: updatedMessages,
       input: '',
       isLoading: true,
       error: null
@@ -68,33 +78,48 @@ export default function Chat() {
 
     try {
       const response = await api.post('/chat', {
-        message: state.input,
+        message: userMessage.content,
         session_id: state.sessionId,
-        role: state.role,
-        top_k: 5,
-        similarity_threshold: 0.5
+        role: state.role
       })
-
-      const data = response.data
 
       const assistantMessage: Message = {
         id: (Date.now() + 1).toString(),
         role: 'assistant',
-        content: data.response,
+        content: response.data.response,
         sources: response.data.sources,
         timestamp: new Date()
       }
 
       updateState({
-        messages: [...state.messages, userMessage, assistantMessage],
+        messages: [...updatedMessages, assistantMessage],
         sessionId: response.data.session_id,
         isLoading: false
       })
     } catch (error: any) {
       updateState({
-        error: error.response?.data?.detail || 'An error occurred. Please try again.',
+        error: error.response?.data?.detail || 'An error occurred',
         isLoading: false
       })
+    }
+  }
+
+  // ---------------- RESET CHAT ----------------
+  const handleResetChat = async () => {
+    try {
+      await fetch('/api/reset', { method: 'POST' })
+
+      updateState({
+        messages: [],
+        input: '',
+        sessionId: null,
+        error: null,
+        isDocumentReady: false
+      })
+
+      alert('Chat reset. You can upload a new document.')
+    } catch {
+      alert('Failed to reset chat')
     }
   }
 
@@ -103,96 +128,98 @@ export default function Chat() {
     router.push('/login')
   }
 
-  const handleRoleChange = (newRole: string) => {
-    updateState({ role: newRole })
-  }
-
   return (
     <div className="flex flex-col h-screen bg-gray-50">
+      {/* HEADER */}
       <header className="bg-white shadow-sm border-b">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center py-4">
-            <h1 className="text-2xl font-bold text-gray-900">AI Research Assistant</h1>
-            <div className="flex items-center space-x-4">
-              <select
-                value={state.role}
-                onChange={(e) => handleRoleChange(e.target.value)}
-                className="px-3 py-1 border border-gray-300 rounded-md text-sm"
-              >
-                <option value="student">Student</option>
-                <option value="researcher">Researcher</option>
-                <option value="interview">Interview Prep</option>
-              </select>
-              <button
-                onClick={handleLogout}
-                className="px-4 py-2 text-sm text-gray-700 hover:text-gray-900"
-              >
-                Logout
-              </button>
-            </div>
+        <div className="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
+          <h1 className="text-2xl font-bold">AI Research Assistant</h1>
+
+          <div className="flex items-center gap-3">
+            <select
+              value={state.role}
+              onChange={e => updateState({ role: e.target.value })}
+              className="px-3 py-1 border rounded text-sm"
+            >
+              <option value="student">Student</option>
+              <option value="researcher">Researcher</option>
+              <option value="interview">Interview Prep</option>
+            </select>
+
+            <button
+              onClick={handleResetChat}
+              className="px-4 py-2 text-sm bg-red-600 text-white rounded hover:bg-red-700"
+            >
+              Reset Chat
+            </button>
+
+            <button
+              onClick={handleLogout}
+              className="px-4 py-2 text-sm text-gray-700 hover:text-gray-900"
+            >
+              Logout
+            </button>
           </div>
         </div>
       </header>
 
-      <div className="flex-1 flex overflow-hidden">
+      {/* BODY */}
+      <div className="flex flex-1 overflow-hidden">
+        {/* CHAT AREA */}
         <div className="flex-1 flex flex-col">
           <div className="flex-1 overflow-y-auto p-4">
             <div className="max-w-4xl mx-auto space-y-4">
-              {state.messages.map((message) => (
-                <ChatMessage key={message.id} message={message} />
+              {state.messages.map(msg => (
+                <ChatMessage key={msg.id} message={msg} />
               ))}
+
               {state.isLoading && (
-                <div className="flex justify-start">
-                  <div className="bg-white rounded-lg p-4 shadow-sm">
-                    <div className="flex space-x-2">
-                      <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
-                      <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{animationDelay: '0.1s'}}></div>
-                      <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{animationDelay: '0.2s'}}></div>
-                    </div>
-                  </div>
-                </div>
+                <div className="text-gray-400">Thinking…</div>
               )}
+
               {state.error && (
-                <div className="flex justify-center">
-                  <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
-                    {state.error}
-                  </div>
+                <div className="text-red-600 bg-red-100 p-2 rounded">
+                  {state.error}
                 </div>
               )}
+
+              <div ref={messagesEndRef} />
             </div>
-            <div ref={messagesEndRef} />
           </div>
 
+          {/* INPUT */}
           <div className="border-t bg-white p-4">
-            <div className="max-w-4xl mx-auto">
-              <div className="flex space-x-4">
-                <input
-                  type="text"
-                  value={state.input}
-                  onChange={(e) => updateState({ input: e.target.value })}
-                  onKeyPress={(e) => e.key === 'Enter' && handleSend()}
-                  placeholder="Ask a question about your documents..."
-                  className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                  disabled={state.isLoading}
-                />
-                <button
-                  onClick={handleSend}
-                  disabled={state.isLoading || !state.input.trim()}
-                  className="px-6 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {state.isLoading ? 'Sending...' : 'Send'}
-                </button>
-              </div>
+            <div className="max-w-4xl mx-auto flex gap-4">
+              <input
+                value={state.input}
+                onChange={e => updateState({ input: e.target.value })}
+                onKeyDown={e => e.key === 'Enter' && handleSend()}
+                placeholder="Ask a question about your documents..."
+                className="flex-1 px-4 py-2 border rounded"
+                disabled={state.isLoading || state.isDocumentUploading || !state.isDocumentReady}
+              />
+              <button
+                onClick={handleSend}
+                disabled={state.isLoading || state.isDocumentUploading || !state.isDocumentReady || !state.input.trim()}
+                className="px-6 py-2 bg-indigo-600 text-white rounded disabled:opacity-50"
+              >
+                Send
+              </button>
             </div>
+            {!state.isDocumentReady && !state.isDocumentUploading && (
+              <div className="text-gray-400 text-sm px-4">Please upload a document to start chatting.</div>
+            )}
+            {state.isDocumentUploading && (
+              <div className="text-gray-400 text-sm px-4">Processing document, please wait...</div>
+            )}
           </div>
         </div>
 
-        <div className="w-80 bg-white border-l shadow-sm">
-          <div className="p-4">
-            <h2 className="text-lg font-semibold mb-4">Upload Documents</h2>
-            <FileUpload />
-          </div>
-        </div>
+        {/* SIDEBAR */}
+        <aside className="w-80 bg-white border-l p-4">
+          <h2 className="text-lg font-semibold mb-4">Upload Documents</h2>
+          <FileUpload onUploadStart={handleUploadStart} onUploadComplete={handleUploadComplete} />
+        </aside>
       </div>
     </div>
   )

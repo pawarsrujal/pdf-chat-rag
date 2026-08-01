@@ -4,13 +4,14 @@ Upload API – Single PDF per chat
 
 from fastapi import APIRouter, UploadFile, File, HTTPException
 from pathlib import Path
-import asyncio, os
+import asyncio, os, logging
 from datetime import datetime
 
 from models.schemas import DocumentUpload, DocumentChunk
 from utils.helpers import extract_text_from_file, chunk_text, clean_text, generate_unique_id
 
 router = APIRouter(tags=["upload"])
+logger = logging.getLogger(__name__)
 
 _embedding_service = None
 _pinecone_db = None
@@ -44,6 +45,7 @@ async def upload_document(file: UploadFile = File(...)):
     global pdf_uploaded
 
     if pdf_uploaded:
+        logger.warning(f"Upload rejected: PDF already uploaded, attempted filename={file.filename}")
         raise HTTPException(
             status_code=400,
             detail="A PDF is already uploaded. Please reset chat before uploading a new file."
@@ -64,6 +66,8 @@ async def upload_document(file: UploadFile = File(...)):
         )
 
         text = clean_text(text)
+        print("🧪 EXTRACTED TEXT PREVIEW:", text[:1000])
+
         if not text.strip():
             raise HTTPException(status_code=400, detail="No readable text found")
 
@@ -76,14 +80,17 @@ async def upload_document(file: UploadFile = File(...)):
         pinecone_db = get_pinecone_db()
         vectors = []
 
-        for chunk_text_, vector in zip(chunks, embeddings):
+        for idx, (chunk_text_, vector) in enumerate(zip(chunks, embeddings)):
             vectors.append(
                 DocumentChunk(
                     id=generate_unique_id(),
                     document_id=document_id,
                     content=chunk_text_,
                     metadata={
-                        "content": chunk_text_
+                        "content": chunk_text_,
+                        "document_id": document_id,
+                        "filename": file.filename,
+                        "chunk_index": idx
                     },
                     embedding=vector
                 )
