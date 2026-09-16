@@ -1,4 +1,4 @@
-# 🧠 RAG Document Chat Assistant
+#  RAG Document Chat Assistant
 
 **An intelligent, hallucination-safe document Q&A system powered by Retrieval-Augmented Generation (RAG).**
 
@@ -32,22 +32,22 @@ Upload a PDF or DOCX file and ask questions about it — the AI answers strictly
 
 ---
 
-## ✨ Features
+##  Features
 
 | Feature | Description |
 |---|---|
-| 📄 Document Upload | Supports PDF and DOCX formats |
-| 🔍 Semantic Search | Pinecone vector DB for context-aware retrieval |
-| 🧠 LLM-Powered Answers | Groq / LLaMA for fast, intelligent responses |
-| 🧪 OCR Fallback | Tesseract handles scanned or image-based PDFs |
-| 📌 Source Attribution | Answers include confidence scores and source references |
-| 🛡️ Hallucination-Safe | Explicitly says *"I don't know"* when info isn't in the document |
-| 🎯 Summary-Aware Retrieval | Handles long documents intelligently |
-| 🔄 Session Reset | Easily clear context and upload a new document |
+|  Document Upload | Supports PDF and DOCX formats |
+|  Semantic Search | Pinecone vector DB for context-aware retrieval |
+|  LLM-Powered Answers | Groq / LLaMA for fast, intelligent responses |
+|  OCR Fallback | Tesseract handles scanned or image-based PDFs |
+|  Source Attribution | Answers include confidence scores and source references |
+|  Hallucination-Safe | Explicitly says *"I don't know"* when info isn't in the document |
+|  Summary-Aware Retrieval | Handles long documents intelligently |
+|  Session Reset | Easily clear context and upload a new document |
 
 ---
 
-## 🏗️ Architecture
+##  Architecture
 
 ```
                      ┌─────────────┐
@@ -80,7 +80,7 @@ Upload a PDF or DOCX file and ask questions about it — the AI answers strictly
 
 ---
 
-## 🧩 Tech Stack
+##  Tech Stack
 
 **Frontend**
 - Next.js (React) · TypeScript · Tailwind CSS
@@ -96,7 +96,7 @@ Upload a PDF or DOCX file and ask questions about it — the AI answers strictly
 
 ---
 
-## 📂 Project Structure
+##  Project Structure
 
 ```
 rag-document-chat-assistant/
@@ -138,7 +138,7 @@ rag-document-chat-assistant/
 
 ---
 
-## 🔄 How It Works
+##  How It Works
 
 1. **Upload** — User uploads a PDF or DOCX document.
 2. **Parse & Chunk** — The document is extracted (with OCR fallback for scanned pages) and split into semantic chunks.
@@ -149,7 +149,7 @@ rag-document-chat-assistant/
 
 ---
 
-## 🚀 Getting Started
+##  Getting Started
 
 ### Prerequisites
 
@@ -202,7 +202,7 @@ Frontend will be available at `http://localhost:3000`.
 
 ---
 
-## 🔐 Environment Variables
+##  Environment Variables
 
 Create a `.env` file inside `backend/` with the following keys:
 
@@ -219,11 +219,11 @@ And a `.env.local` file inside `frontend/`:
 NEXT_PUBLIC_API_URL=http://localhost:8000
 ```
 
-> ⚠️ Never commit your `.env` files. Make sure they're listed in `.gitignore`.
+>  Never commit your `.env` files. Make sure they're listed in `.gitignore`.
 
 ---
 
-## 🐳 Running with Docker
+##  Running with Docker
 
 The fastest way to spin up the full stack (backend + frontend) is with Docker Compose:
 
@@ -238,7 +238,7 @@ This will build and start both services as defined in `docker-compose.yml`. Once
 
 ---
 
-## ☁️ Deployment
+##  Deployment
 
 This project ships with ready-made configs for a split deployment:
 
@@ -252,7 +252,7 @@ Steps:
 
 ---
 
-## 🎯 Use Cases
+##  Use Cases
 
 - Academic paper analysis
 - Legal document Q&A
@@ -262,7 +262,7 @@ Steps:
 
 ---
 
-## 🗺️ Roadmap
+##  Roadmap
 
 - [ ] Multi-document support with cross-document reasoning
 - [ ] Chat history persistence
@@ -272,7 +272,7 @@ Steps:
 
 ---
 
-## 🤝 Contributing
+##  Contributing
 
 Contributions are welcome!
 
